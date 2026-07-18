@@ -1,151 +1,189 @@
-<div align="center">
+# ShadowAI System Architecture
 
-# 🏗️ ShadowAI System Architecture
+> This document provides a detailed, real-world architectural overview for **ShadowAI**, an AI-native Data Loss Prevention (DLP) platform.
 
-### Enterprise-Grade AI Data Loss Prevention Platform
 
-*Real-time Prompt Inspection • Explainable Risk Engine • Zero-Trust AI Security • Browser Extension Monitoring*
+# 1. High-Level Architecture Overview
 
-</div>
-
----
-
-# 📑 Table of Contents
-
-1. Architecture Overview
-2. High-Level System Design
-3. Component Architecture
-4. Browser Extension Workflow
-5. Backend Processing Pipeline
-6. AI Risk Engine
-7. Explainability Engine
-8. Policy Engine
-9. Admin Dashboard
-10. Data Flow
-11. Security Architecture
-12. Scalability
-13. Deployment Architecture
-
----
-
-# 1. Architecture Overview
-
-ShadowAI is an AI-native Data Loss Prevention (DLP) platform designed specifically for modern Generative AI applications.
-
-Instead of blocking websites, ShadowAI understands prompts before they leave the employee's computer.
-
-The platform intercepts AI prompts, analyzes them locally and in the backend, assigns an explainable risk score, enforces enterprise security policies, and provides administrators with complete visibility over AI usage across the organization.
-
-The architecture follows a Zero Trust security model where every prompt is treated as untrusted until evaluated.
-
----
-
-# 2. High-Level Architecture
+ShadowAI protects organizations from accidental or malicious leakage of sensitive data to public AI platforms. Before a prompt reaches ChatGPT, Claude, Gemini, or another LLM, ShadowAI intercepts it, analyzes its contents, evaluates organizational policies, and decides whether to allow, warn, or block the request.
 
 ```mermaid
 flowchart LR
+A[Employee] --> B[Browser Extension]
+B --> C[Local Validation]
+C --> D[Backend API]
+D --> E[AI Risk Engine]
+E --> F[Policy Engine]
 
-A[Employee]
+F -->|Allow| G[AI Provider]
+F -->|Warn| H[Warning Popup]
+F -->|Block| I[Prompt Blocked]
 
-A --> B[Browser Extension]
-
-B --> C[Prompt Scanner]
-
-C --> D[Risk Engine]
-
-D --> E{Policy Engine}
-
-E -->|Allow| F[ChatGPT / Claude / Gemini]
-
-E -->|Warn| G[Warning Popup]
-
-E -->|Block| H[Request Blocked]
-
-D --> I[Backend API]
-
-I --> J[Admin Dashboard]
-
-I --> K[Analytics Database]
-
-I --> L[Audit Logs]
+E --> J[(Audit Logs)]
+J --> K[(Analytics DB)]
+K --> L[Admin Dashboard]
 ```
 
 ---
 
-# 3. Core Components
+# 2. Component Deep Dive
 
-## Browser Extension
+## 2.1 Browser Extension (React + TypeScript + Chrome Extension API)
 
-Responsible for
+Framework: React, TypeScript, Chrome Extension Manifest V3.
 
-- Detecting supported AI websites
-- Reading prompts before submission
-- Scanning attachments
-- Extracting metadata
-- Performing local analysis
-- Sending encrypted request to backend
+Core Responsibilities:
 
-Technologies
+  - Intercepts prompts from supported AI platforms such as ChatGPT, Claude, Gemini, and Microsoft Copilot before they are submitted.
+  - Performs lightweight client-side validation to detect obvious risks and extracts prompt metadata for further analysis.
+  - Communicates securely with the backend using HTTPS REST APIs and displays Allow, Warn, or Block decisions in real time.
 
-- React
-- TypeScript
-- Chrome Extension API
-- Manifest V3
+Key Components:
 
----
-
+  - Content Scripts: Monitor AI websites and capture prompts.
+  - Background Service Worker: Manages API communication and extension lifecycle.
+  - Popup UI: Displays security status, warnings, and policy notifications.
 ## Backend API
 
-Handles
-
-- Authentication
-- Policy evaluation
-- Risk analysis
-- Prompt processing
-- Audit logging
-- Dashboard APIs
-
-Technologies
-
-- FastAPI
-- Python
-- JWT Authentication
-
----
+- Authenticates users, validates requests, and acts as the central communication layer between all system components.
+- Coordinates prompt analysis by interacting with the AI Risk Engine and Policy Engine to determine the appropriate action.
+- Stores audit logs, records security events, and provides data to the Analytics Dashboard for monitoring and reporting.
 
 ## AI Risk Engine
 
-The heart of ShadowAI.
+- Analyzes prompts to detect sensitive information such as API keys, passwords, PII, source code, confidential documents, and prompt injection attempts.
+- Calculates an explainable risk score by combining the results from multiple detection modules.
+- Generates detailed reasoning for every decision, helping users and administrators understand why a prompt was allowed, warned, or blocked.
 
-Instead of simple keyword detection, the Risk Engine combines multiple detectors.
+## Policy Engine
+- Evaluates risk reports against configurable enterprise security policies and compliance requirements.
+- Determines whether a prompt should be allowed, shown with a warning, or blocked based on predefined rules.
+- Enables administrators to update security policies centrally without modifying the extension or backend services.
 
-### Detection Modules
+## Analytics & Dashboard
+- Collects AI usage data, audit logs, policy violations, and user activities to provide real-time security insights.
+- Visualizes key metrics such as prompt volume, blocked requests, high-risk users, and policy compliance through interactive dashboards.
+- Helps security teams investigate incidents, monitor AI adoption, and generate compliance reports for governance and auditing.
 
-✔ API Key Detection
+---
 
-✔ Password Detection
+# 3. Core System Flows
 
-✔ AWS Secrets
+## 3.1 Prompt Submission & Analysis
 
-✔ Private Keys
+```mermaid
+flowchart LR
 
-✔ Database Credentials
+A[User Types Prompt]
+--> B[Browser Extension]
+--> C[Local Validation]
+--> D[Backend API]
+--> E[AI Risk Engine]
+--> F[Policy Engine]
 
-✔ Source Code Detection
+F -->|Allow| G[AI Provider]
+F -->|Warn| H[Warning]
+F -->|Block| I[Blocked]
 
-✔ Customer PII
+G --> J[AI Response]
+J --> K[User]
+```
 
-✔ Internal URLs
+### Flow
+1. User submits prompt.
+2. Extension intercepts request.
+3. Backend performs deep inspection.
+4. Risk engine generates findings.
+5. Policy engine decides action.
+6. AI receives prompt only if allowed.
 
-✔ Company Confidential Documents
+---
 
-✔ Prompt Injection Attempts
+## 3.2 AI Risk Assessment
 
-✔ Jailbreak Prompts
+```mermaid
+flowchart TD
 
-✔ Toxic Content
+Prompt
+--> SecretDetection
+--> PIIDetection
+--> SourceCodeDetection
+--> PolicyMatching
+--> RiskScore
+--> Explainability
+--> Decision
+```
 
-✔ Data Classification
+Risk score considers:
+- API Keys
+- Passwords
+- AWS Secrets
+- Source Code
+- PII
+- Internal URLs
+- Company policies
+
+---
+
+## 3.3 Policy Enforcement
+
+```mermaid
+flowchart TD
+
+RiskReport
+--> PolicyEngine
+--> RuleEvaluation
+
+RuleEvaluation --> Allow
+RuleEvaluation --> Warn
+RuleEvaluation --> Block
+
+Allow --> Audit
+Warn --> Audit
+Block --> Audit
+```
+
+---
+
+## 3.4 Incident & Audit Logging
+
+```mermaid
+flowchart LR
+
+Decision
+--> Incident
+--> AuditLog
+--> AnalyticsDB
+--> Dashboard
+```
+
+Every decision is logged with:
+- Timestamp
+- User
+- Device
+- Risk score
+- Triggered rules
+- Final action
+
+---
+
+## 3.5 Admin Monitoring
+
+```mermaid
+flowchart LR
+
+PromptEvents
+--> Analytics
+--> DashboardAPI
+--> AdminDashboard
+--> SecurityTeam
+```
+
+Administrators can:
+- View AI usage
+- Investigate incidents
+- Export compliance reports
+- Track risky users
 
 ---
 
@@ -155,401 +193,186 @@ Instead of simple keyword detection, the Risk Engine combines multiple detectors
 sequenceDiagram
 
 participant User
-
 participant Extension
-
 participant Backend
-
 participant AI
 
-User->>Extension: Writes Prompt
+User->>Extension: Submit Prompt
+Extension->>Extension: Local Validation
+Extension->>Backend: Secure Analysis
+Backend-->>Extension: Risk Decision
 
-Extension->>Extension: Local Scan
-
-Extension->>Backend: Secure Analysis Request
-
-Backend->>Backend: Calculate Risk
-
-Backend-->>Extension: Risk Result
-
-alt Safe
-
-Extension->>AI: Send Prompt
-
+alt Allowed
+Extension->>AI: Forward Prompt
 AI-->>User: Response
-
 else Warning
-
-Extension->>User: Warning Dialog
-
-else Block
-
-Extension->>User: Request Blocked
-
+Extension-->>User: Warning Popup
+else Blocked
+Extension-->>User: Request Blocked
 end
 ```
 
----
-
-# 5. Risk Scoring Engine
-
-Instead of producing a mysterious score, ShadowAI explains every decision.
-
-Example
-
-```
-Risk Score : 96 / 100
-
-Reasoning
-
-AWS Secret Key detected
-Confidence 99%
-+40
-
-Source Code
-Detected
-+25
-
-Public AI Website
-+15
-
-Company Policy Violation
-+16
-```
-
-### Risk Formula
-
-```
-Final Risk Score
-
-=
-
-Secrets
-
-+
-
-Sensitive Data
-
-+
-
-Source Code
-
-+
-
-Policy Violations
-
-+
-
-Destination Risk
-
--
-
-Trusted Context
-```
-
-Every point can be traced back to a specific detector.
-
-No black-box AI.
+Responsibilities:
+- Prompt interception
+- Metadata collection
+- Secure communication
+- UI notifications
 
 ---
 
-# 6. Explainability Engine
+# 5. Backend Processing Pipeline
 
-Unlike traditional DLP solutions, ShadowAI explains why a prompt was flagged.
+```mermaid
+flowchart LR
 
-Every alert includes
-
-- Detected entity
-- Detector confidence
-- Policy violated
-- Risk contribution
-- Recommended action
-
-Example
-
-```
-Blocked because
-
-AWS Secret Key
-High Confidence
-
-Company Source Code
-
-Sending to Public ChatGPT
-
-Policy SEC-102 violated
+IncomingRequest
+--> Authentication
+--> Validation
+--> PromptParsing
+--> RiskAnalysis
+--> PolicyEvaluation
+--> AuditLogging
+--> Response
 ```
 
-This dramatically reduces false positives.
+Pipeline stages:
+1. Authenticate request
+2. Validate payload
+3. Extract prompt content
+4. Execute detection modules
+5. Calculate risk
+6. Evaluate policies
+7. Store audit record
+8. Return decision
 
 ---
 
-# 7. Policy Engine
-
-Administrators create enterprise policies such as
-
-```
-Never send
-
-Passwords
-
-API Keys
-
-Private Keys
-
-Source Code
-
-Customer Information
-
-Financial Records
-```
-
-Example Rule
-
-```
-IF
-
-Destination = ChatGPT
-
-AND
-
-Contains Source Code
-
-THEN
-
-Warn User
-```
-
-Another
-
-```
-IF
-
-Contains AWS Secret
-
-THEN
-
-Block Immediately
-```
-
----
-
-# 8. Admin Dashboard
-
-The dashboard provides complete visibility into AI usage.
-
-## Dashboard Modules
-
-### Overview
-
-- Total AI Requests
-- High Risk Prompts
-- Blocked Requests
-- Departments
-- Top AI Tools
-
----
-
-### Analytics
-
-Charts
-
-- Daily Usage
-- Weekly Trends
-- Risk Distribution
-- Most Violated Policies
-
----
-
-### User Management
-
-- Employees
-- Departments
-- Devices
-- Roles
-
----
-
-### Incident Center
-
-Every blocked request
-
-Includes
-
-- User
-- Department
-- Timestamp
-- Risk Score
-- Triggered Rules
-- Action Taken
-
----
-
-# 9. Data Flow
+# 6. AI Risk Engine
 
 ```mermaid
 flowchart TD
 
 Prompt
+--> Secrets
+Prompt --> PII
+Prompt --> SourceCode
+Prompt --> PromptInjection
+Prompt --> SensitiveDocs
 
-↓
+Secrets --> Score
+PII --> Score
+SourceCode --> Score
+PromptInjection --> Score
+SensitiveDocs --> Score
 
-Browser Extension
-
-↓
-
-Local Scanner
-
-↓
-
-Backend API
-
-↓
-
-Risk Engine
-
-↓
-
-Policy Engine
-
-↓
-
-Audit Logs
-
-↓
-
-Dashboard
-
-↓
-
-AI Platform
+Score --> Explainability
+Explainability --> FinalDecision
 ```
 
----
+## Detection Modules
 
-# 10. Security Architecture
+| Module | Purpose |
+|---------|---------|
+| Secret Detector | API keys, passwords, tokens |
+| PII Detector | Personal information |
+| Source Code Detector | Proprietary code |
+| Prompt Injection Detector | Jailbreak attempts |
+| Policy Matcher | Enterprise compliance |
 
-ShadowAI follows Zero Trust principles.
+Example:
 
-Features
+```
+Risk Score: 94/100
 
-- JWT Authentication
-- HTTPS Everywhere
-- AES-256 Encryption
-- Secure Audit Logs
-- Role Based Access Control
-- Rate Limiting
-- Browser Sandboxing
-- CSP Policies
-- Encrypted Storage
-- Signed Extension
-
----
-
-# 11. Database Design
-
-```mermaid
-erDiagram
-
-USER ||--o{ PROMPT : sends
-
-USER ||--o{ INCIDENT : generates
-
-PROMPT ||--|| RISK_REPORT : creates
-
-RISK_REPORT ||--o{ DETECTION : contains
-
-POLICY ||--o{ INCIDENT : triggers
++40 AWS Secret Key
++25 Source Code
++15 Internal URL
++14 Company Policy Violation
 ```
 
----
-
-# 12. Scalability
-
-ShadowAI is designed using stateless services.
-
-Supports
-
-- Horizontal Scaling
-- Load Balancers
-- Redis Cache
-- Queue Workers
-- Docker Containers
-- Kubernetes Deployment
-- Multiple AI Providers
-
-Expected Throughput
-
-10,000+ Prompt Scans / Minute
+Every score is fully explainable.
 
 ---
 
-# 13. Deployment Architecture
+# 7. Security Architecture
 
 ```mermaid
 flowchart LR
 
-Chrome Extension
+User
+--> HTTPS
+--> Backend
 
-↓
+Backend --> JWT
 
-FastAPI
+JWT --> RBAC
 
-↓
+RBAC --> RiskEngine
 
-Redis
+RiskEngine --> AES256
 
-↓
-
-PostgreSQL
-
-↓
-
-Risk Engine
-
-↓
-
-Dashboard
-
-↓
-
-Admin
+AES256 --> AuditLogs
 ```
 
----
+Security principles:
 
-# Technology Stack
-
-| Layer | Technology |
-|---------|------------|
-| Frontend | React |
-| Extension | TypeScript |
-| Backend | FastAPI |
-| Database | PostgreSQL |
-| Cache | Redis |
-| Authentication | JWT |
-| Queue | Celery |
-| Deployment | Docker |
-| Cloud | AWS |
-| Monitoring | Grafana |
+- Zero Trust
+- JWT Authentication
+- HTTPS/TLS
+- Role-Based Access Control
+- AES-256 Encryption
+- Immutable Audit Logs
+- Least Privilege
+- Secure Extension Communication
 
 ---
 
-# Key Design Principles
+# 8. Scalability & Security Considerations
 
-- Zero Trust Architecture
-- Explainable AI Security
-- Privacy by Design
-- Least Privilege Access
-- Real-Time Enforcement
-- Modular Detection Engine
-- Enterprise Scalability
-- High Availability
-- Low Latency (<100 ms)
-- Complete Auditability
+```mermaid
+flowchart LR
+
+LoadBalancer
+--> API1
+LoadBalancer --> API2
+LoadBalancer --> API3
+
+API1 --> Redis
+API2 --> Redis
+API3 --> Redis
+
+Redis --> PostgreSQL
+
+PostgreSQL --> Dashboard
+```
+
+## Scalability
+- Stateless backend
+- Horizontal scaling
+- Redis caching
+- Docker containers
+- Kubernetes deployment
+- Async processing
+- API rate limiting
+
+## Reliability
+- Health checks
+- Centralized logging
+- Monitoring & alerts
+- Automatic retries
+- Backup strategy
+
+## Performance Goals
+
+| Metric | Target |
+|---------|--------|
+| Prompt Analysis | <100 ms |
+| Risk Decision | <150 ms |
+| Dashboard Refresh | <2 s |
+| Availability | 99.9% |
 
 ---
 
 # Conclusion
 
-ShadowAI transforms AI security from simple website blocking into intelligent, explainable prompt protection. By combining browser-level interception, contextual risk analysis, enterprise policy enforcement, and transparent decision-making, it enables organizations to embrace Generative AI while safeguarding sensitive information from accidental or malicious exposure.
+ShadowAI combines browser-level prompt interception, intelligent risk analysis, enterprise policy enforcement, and explainable AI security into a single platform. Its modular architecture enables organizations to safely adopt generative AI while protecting sensitive information and maintaining regulatory compliance.
