@@ -30,40 +30,68 @@ K --> L[Admin Dashboard]
 
 ## 2.1 Browser Extension (React + TypeScript + Chrome Extension API)
 
-Framework: React, TypeScript, Chrome Extension Manifest V3.
+- **Framework**: React, TypeScript, Chrome Extension Manifest V3.
 
-Core Responsibilities:
-
+- **Core Responsibilities**:
   - Intercepts prompts from supported AI platforms such as ChatGPT, Claude, Gemini, and Microsoft Copilot before they are submitted.
   - Performs lightweight client-side validation to detect obvious risks and extracts prompt metadata for further analysis.
   - Communicates securely with the backend using HTTPS REST APIs and displays Allow, Warn, or Block decisions in real time.
 
-Key Components:
+- **Key Components:**
 
   - Content Scripts: Monitor AI websites and capture prompts.
   - Background Service Worker: Manages API communication and extension lifecycle.
   - Popup UI: Displays security status, warnings, and policy notifications.
-## Backend API
+  
+## 2.3 Backend API
 
-- Authenticates users, validates requests, and acts as the central communication layer between all system components.
-- Coordinates prompt analysis by interacting with the AI Risk Engine and Policy Engine to determine the appropriate action.
-- Stores audit logs, records security events, and provides data to the Analytics Dashboard for monitoring and reporting.
+- **Framework**: FastAPI, Python.
 
-## AI Risk Engine
+- **Routing Layer** (/app/routes/):
 
-- Analyzes prompts to detect sensitive information such as API keys, passwords, PII, source code, confidential documents, and prompt injection attempts.
-- Calculates an explainable risk score by combining the results from multiple detection modules.
-- Generates detailed reasoning for every decision, helping users and administrators understand why a prompt was allowed, warned, or blocked.
+  auth.py: Authenticates users and manages JWT-based sessions.
+  scan.py: Receives prompt analysis requests from the browser extension.
+  policy.py: Evaluates prompts against enterprise security policies.
+  analytics.py: Provides dashboard metrics and reporting APIs.
 
-## Policy Engine
+- **Services Layer** (/app/services/):
+
+  risk_service.py: Coordinates prompt analysis by invoking multiple detection modules.
+  logging_service.py: Records audit logs, incidents, and security events.
+  notification_service.py: Sends alerts and notifications for critical incidents.
+
+- **Core Engine** (/app/core/):
+
+  validation.py: Validates incoming requests and sanitizes data.
+  security.py: Handles encryption, authentication utilities, and secure communication.
+  config.py: Centralized configuration and policy settings.
+
+## 2.3 AI Risk Engine
+
+**Detection Modules:**
+
+- Secret Detector: Detects API keys, passwords, access tokens, AWS secrets, and private keys.
+- PII Detector: Identifies emails, phone numbers, Aadhaar numbers, PAN numbers, and other personally identifiable information.
+- Source Code Detector: Recognizes programming languages and detects proprietary source code snippets.
+- Prompt Injection Detector: Identifies jailbreak attempts, prompt injection techniques, and unsafe instructions.
+- Document Classifier: Detects confidential documents, internal URLs, and business-sensitive information.
+
+## 2.4 Policy Engine
+
 - Evaluates risk reports against configurable enterprise security policies and compliance requirements.
 - Determines whether a prompt should be allowed, shown with a warning, or blocked based on predefined rules.
 - Enables administrators to update security policies centrally without modifying the extension or backend services.
 
-## Analytics & Dashboard
-- Collects AI usage data, audit logs, policy violations, and user activities to provide real-time security insights.
-- Visualizes key metrics such as prompt volume, blocked requests, high-risk users, and policy compliance through interactive dashboards.
-- Helps security teams investigate incidents, monitor AI adoption, and generate compliance reports for governance and auditing.
+## 2.5 Analytics & Dashboard
+
+- **Framework:** React, Tailwind CSS, Recharts.
+
+- **Dashboard Modules:**
+
+  **Overview**: Displays AI usage, blocked prompts, and security trends.
+  **Incident Center**: Lists security incidents with detailed investigation reports.
+  **User Analytics**: Tracks AI adoption, risky users, and department-wise activity.
+  **Compliance Reports**: Generates audit logs and policy violation summaries.
 
 ---
 
@@ -89,13 +117,7 @@ G --> J[AI Response]
 J --> K[User]
 ```
 
-### Flow
-1. User submits prompt.
-2. Extension intercepts request.
-3. Backend performs deep inspection.
-4. Risk engine generates findings.
-5. Policy engine decides action.
-6. AI receives prompt only if allowed.
+
 
 ---
 
@@ -145,29 +167,7 @@ Block --> Audit
 
 ---
 
-## 3.4 Incident & Audit Logging
-
-```mermaid
-flowchart LR
-
-Decision
---> Incident
---> AuditLog
---> AnalyticsDB
---> Dashboard
-```
-
-Every decision is logged with:
-- Timestamp
-- User
-- Device
-- Risk score
-- Triggered rules
-- Final action
-
----
-
-## 3.5 Admin Monitoring
+## 3.4 Admin Monitoring
 
 ```mermaid
 flowchart LR
@@ -179,15 +179,10 @@ PromptEvents
 --> SecurityTeam
 ```
 
-Administrators can:
-- View AI usage
-- Investigate incidents
-- Export compliance reports
-- Track risky users
-
 ---
 
 # 4. Browser Extension Workflow
+The Browser Extension is the entry point of the ShadowAI platform and serves as the first layer of defense against sensitive data leakage. Running directly in the user's browser, it continuously monitors supported AI platforms. Before any prompt is submitted, the extension intercepts the request, performs lightweight local validation, and securely sends the prompt metadata to the backend for a comprehensive security analysis. Based on the returned decision, it either allows the prompt to proceed, warns the user about potential risks, or blocks the request entirely, ensuring confidential information never reaches external AI services without evaluation.
 
 ```mermaid
 sequenceDiagram
@@ -212,15 +207,11 @@ Extension-->>User: Request Blocked
 end
 ```
 
-Responsibilities:
-- Prompt interception
-- Metadata collection
-- Secure communication
-- UI notifications
 
 ---
 
 # 5. Backend Processing Pipeline
+The Backend Processing Pipeline is the central workflow that handles every prompt received from the browser extension. It ensures that each request is securely authenticated, thoroughly analyzed, and evaluated against enterprise security policies before any data is sent to an external AI platform. The pipeline coordinates communication between the AI Risk Engine, Policy Engine, database, and analytics modules while maintaining detailed audit logs for compliance and monitoring
 
 ```mermaid
 flowchart LR
@@ -235,39 +226,10 @@ IncomingRequest
 --> Response
 ```
 
-Pipeline stages:
-1. Authenticate request
-2. Validate payload
-3. Extract prompt content
-4. Execute detection modules
-5. Calculate risk
-6. Evaluate policies
-7. Store audit record
-8. Return decision
 
 ---
 
 # 6. AI Risk Engine
-
-```mermaid
-flowchart TD
-
-Prompt
---> Secrets
-Prompt --> PII
-Prompt --> SourceCode
-Prompt --> PromptInjection
-Prompt --> SensitiveDocs
-
-Secrets --> Score
-PII --> Score
-SourceCode --> Score
-PromptInjection --> Score
-SensitiveDocs --> Score
-
-Score --> Explainability
-Explainability --> FinalDecision
-```
 
 ## Detection Modules
 
@@ -295,6 +257,7 @@ Every score is fully explainable.
 ---
 
 # 7. Security Architecture
+The Security Architecture of ShadowAI follows a Zero Trust approach, where every prompt is considered untrusted until it has been analyzed and approved
 
 ```mermaid
 flowchart LR
@@ -314,53 +277,18 @@ RiskEngine --> AES256
 AES256 --> AuditLogs
 ```
 
-Security principles:
-
-- Zero Trust
-- JWT Authentication
-- HTTPS/TLS
-- Role-Based Access Control
-- AES-256 Encryption
-- Immutable Audit Logs
-- Least Privilege
-- Secure Extension Communication
-
 ---
 
 # 8. Scalability & Security Considerations
 
-```mermaid
-flowchart LR
-
-LoadBalancer
---> API1
-LoadBalancer --> API2
-LoadBalancer --> API3
-
-API1 --> Redis
-API2 --> Redis
-API3 --> Redis
-
-Redis --> PostgreSQL
-
-PostgreSQL --> Dashboard
-```
-
 ## Scalability
-- Stateless backend
-- Horizontal scaling
-- Redis caching
-- Docker containers
-- Kubernetes deployment
-- Async processing
-- API rate limiting
-
+  - Horizontal Scaling: Multiple backend instances can run behind a load balancer to handle increasing user traffic.
+  - Modular Design: Independent services such as the Backend API, AI Risk Engine, and Dashboard can be scaled or updated without affecting the entire system.
+  - Optimized Performance: PostgreSQL ensures reliable data storage, while Redis (optional) can be used for faster data access and reduced response times.
 ## Reliability
-- Health checks
-- Centralized logging
-- Monitoring & alerts
-- Automatic retries
-- Backup strategy
+  - High Availability: Load balancing ensures uninterrupted service by redirecting requests if a backend instance fails.
+  - Audit Logging: Every prompt and security decision is securely logged for compliance, monitoring, and incident investigation.
+  - Fault Tolerance: Continuous monitoring and automated recovery mechanisms help maintain system stability and minimize downtime.
 
 ## Performance Goals
 
@@ -372,7 +300,3 @@ PostgreSQL --> Dashboard
 | Availability | 99.9% |
 
 ---
-
-# Conclusion
-
-ShadowAI combines browser-level prompt interception, intelligent risk analysis, enterprise policy enforcement, and explainable AI security into a single platform. Its modular architecture enables organizations to safely adopt generative AI while protecting sensitive information and maintaining regulatory compliance.
