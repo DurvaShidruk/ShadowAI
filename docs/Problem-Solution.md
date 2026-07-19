@@ -175,13 +175,14 @@ Traditional["Traditional Security"]
 
 -->
 
-StopsAI["🚫 Block AI"]
+StopsAI[" Block AI"]
 
 ShadowAI["ShadowAI"]
 
+
 -->
 
-SecureAI["✅ Secure AI"]
+SecureAI[" Secure AI"]
 ```
 
 ---
