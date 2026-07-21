@@ -8,20 +8,43 @@
 ShadowAI protects organizations from accidental or malicious leakage of sensitive data to public AI platforms. Before a prompt reaches ChatGPT, Claude, Gemini, or another LLM, ShadowAI intercepts it, analyzes its contents, evaluates organizational policies, and decides whether to allow, warn, or block the request.
 
 ```mermaid
-flowchart LR
-A[Employee] --> B[Browser Extension]
-B --> C[Local Validation]
-C --> D[Backend API]
-D --> E[AI Risk Engine]
-E --> F[Policy Engine]
+flowchart TB
 
-F -->|Allow| G[AI Provider]
-F -->|Warn| H[Warning Popup]
-F -->|Block| I[Prompt Blocked]
+A[Employee]
 
-E --> J[(Audit Logs)]
-J --> K[(Analytics DB)]
-K --> L[Admin Dashboard]
+--> B[Browser Extension]
+
+--> C[Capture Prompt]
+
+--> D[Backend API]
+
+D --> E[Preprocessing]
+
+E --> F[AI Risk Engine]
+
+F --> G[Pattern Detection]
+
+F --> H[PII Detection]
+
+F --> I[Credential Detection]
+
+G --> J[Risk Score]
+H --> J
+I --> J
+
+J --> K[Policy Engine]
+
+K -->|Allow| L[AI Provider]
+
+K -->|Warn| M[Warning Popup]
+
+K -->|Block| N[Prompt Blocked]
+
+J --> O[(Audit Logs)]
+
+O --> P[(Analytics)]
+
+P --> Q[Admin Dashboard]
 ```
 
 ---
