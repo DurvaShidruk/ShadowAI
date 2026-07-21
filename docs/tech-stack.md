@@ -1,6 +1,6 @@
 <div align="center">
 
-# 💻 Tech Stack
+#  Tech Stack
 
 ### Technologies Used in ShadowAI
 
@@ -20,20 +20,8 @@
 
 ---
 
-# 📑 Table of Contents
 
-- Overview
-- Frontend
-- Browser Extension
-- Backend
-- AI & Detection
-- Database
-- Security
-- Development Tools
-
----
-
-# 📌 Overview
+#  Overview
 
 ShadowAI is built using a combination of modern web technologies and AI libraries. We selected each technology based on performance, ease of development, and its ability to support real-time prompt analysis.
 
@@ -51,7 +39,7 @@ ShadowAI is built using a combination of modern web technologies and AI librarie
 
 ---
 
-# 🎨 Frontend
+#  Frontend
 
 The Admin Dashboard is built using **React** and **TypeScript**, making it responsive, maintainable, and easy to extend.
 
@@ -65,7 +53,7 @@ The Admin Dashboard is built using **React** and **TypeScript**, making it respo
 
 ---
 
-# 🧩 Browser Extension
+#  Browser Extension
 
 The browser extension is responsible for detecting prompts before they are submitted to AI platforms.
 
@@ -84,7 +72,7 @@ The browser extension is responsible for detecting prompts before they are submi
 
 ---
 
-# ⚙️ Backend
+#  Backend
 
 The backend handles communication between the extension, AI engine, and dashboard.
 
@@ -104,7 +92,7 @@ The backend is responsible for:
 
 ---
 
-# 🧠 AI & Detection
+#  AI & Detection
 
 This is the core of ShadowAI. Different detection methods work together to identify sensitive information inside prompts.
 
@@ -115,23 +103,15 @@ This is the core of ShadowAI. Different detection methods work together to ident
 | Regular Expressions | Detect API keys, passwords, and tokens |
 | Custom Risk Engine | Calculate the final risk score |
 
-The system can identify:
-
-- API Keys
-- Passwords
-- Access Tokens
-- Source Code
-- Customer Information
-- Internal Documents
+The AI engine is the core of ShadowAI. Instead of relying on a single detection method, it combines multiple techniques to identify sensitive information with greater accuracy. **Microsoft Presidio** is used to detect personally identifiable information, while **spaCy** performs Named Entity Recognition to identify names, organizations, and locations. Regular expressions help identify structured patterns such as API keys, passwords, and authentication tokens. The results from these detectors are combined to generate a final risk score that determines whether a prompt should be allowed, warned, or blocked.
 
 ---
 
-# 🗄️ Database
+#  Database
 
 PostgreSQL stores all application data.
 
 It keeps track of:
-
 - Users
 - Security Policies
 - Audit Logs
@@ -140,10 +120,9 @@ It keeps track of:
 
 ---
 
-# 🔒 Security
+#  Security
 
 To keep communication secure, ShadowAI uses:
-
 - JWT Authentication
 - HTTPS Communication
 - Role-Based Access Control
@@ -152,7 +131,7 @@ To keep communication secure, ShadowAI uses:
 
 ---
 
-# 🛠️ Development Tools
+#  Development Tools
 
 | Tool | Purpose |
 |------|---------|
@@ -164,7 +143,7 @@ To keep communication secure, ShadowAI uses:
 
 ---
 
-# 🏗️ Architecture Overview
+#  Architecture Overview
 
 ```mermaid
 flowchart TD
@@ -184,6 +163,6 @@ Backend --> Database
 
 ---
 
-# ✅ Why This Stack?
+#  Why This Stack?
 
 We chose this stack because it is simple, reliable, and well-suited for building a real-time security application. React provides a smooth user experience, FastAPI offers fast API performance, Python integrates easily with AI libraries, and PostgreSQL ensures reliable data storage. Together, these technologies make ShadowAI easy to develop, scalable, and ready for future enhancements.
