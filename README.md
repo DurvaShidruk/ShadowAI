@@ -62,7 +62,7 @@ flowchart TD
     style L fill:#1E293B,stroke:#64748B,color:#fff
 ```
 
-The whole round trip — intercept, scan, score, decide — happens before the prompt is ever allowed to leave the machine.
+The whole round trip intercept, scan, score, decide  happens before the prompt is ever allowed to leave the machine.
 
 <br/>
 
